@@ -7,7 +7,7 @@ import { signInSignUpWithGoogle } from '../firebase';
 const API_KEY = import.meta.env.VITE_API_KEY;
 
 
-export const login = (userData, setSuccessToggle) => async (dispatch) => {
+export const login = (userData) => async (dispatch) => {
     try {
         dispatch(loginRequest());
 
@@ -17,14 +17,19 @@ export const login = (userData, setSuccessToggle) => async (dispatch) => {
             }
         };
 
-        const { data } = await axios.post(`${API_KEY}/api/auth/login`, userData, config);
+        const response = await axios.post(`${API_KEY}/api/user/login`, userData, config);
 
-        localStorage.setItem('token', data.token);
+        console.log(response.status)
 
-        dispatch(loginSuccess());
-        setSuccessToggle(true)
-        dispatch(verify())
-        toast.success("Login Successful!");
+        if (response.status === 200) {
+            localStorage.setItem('token', response.data.data.token);
+            dispatch(loginSuccess());
+            dispatch(verify())
+            toast.success(response.data.message);
+        }
+
+
+
     } catch (err) {
         dispatch(loginFail(err.response.data.message));
         console.log(err);
@@ -32,7 +37,7 @@ export const login = (userData, setSuccessToggle) => async (dispatch) => {
     }
 };
 
-export const register = (userData, setSuccessToggle) => async (dispatch) => {
+export const signup = (userData) => async (dispatch) => {
     try {
 
         dispatch(registerRequest())
@@ -44,14 +49,17 @@ export const register = (userData, setSuccessToggle) => async (dispatch) => {
             }
         };
 
-        const { data } = await axios.post(`${API_KEY}/api/auth/register`, userData, config)
+        const response = await axios.post(`${API_KEY}/api/user/register`, userData, config)
 
-        localStorage.setItem('token', data.token)
 
-        dispatch(registerSuccess());
-        dispatch(verify())
-        toast.success("Register Successful !");
-        setSuccessToggle(true)
+        if (response.status === 201) {
+            localStorage.setItem('token', response.data.data.token);
+            dispatch(registerSuccess());
+            dispatch(verify())
+            toast.success(response.data.message);
+        } else {
+            toast.error(response.data.message);
+        }
 
     } catch (err) {
         dispatch(registerFail(err.response.data.message));
@@ -69,23 +77,24 @@ export const verify = () => async (dispatch) => {
             }
         }
 
-        const { data } = await axios.get(`${API_KEY}/api/auth/verify`, config);
+        const response = await axios.get(`${API_KEY}/api/user/auth/verify`, config);
 
-        // console.log("data", data)
+        console.log(response)
 
-        dispatch(verifyLoginSuccess(data))
-
-
+        if (response.status === 200) {
+            dispatch(verifyLoginSuccess(response.data))
+        }
     } catch (err) {
         dispatch(verifyLoginFail())
     }
 }
 
-export const googleAuth = (setSuccessToggle) => async (dispatch) => {
+export const googleAuth = () => async (dispatch) => {
 
     try {
-        
+
         const token = await signInSignUpWithGoogle();
+        
         try {
             const config = {
                 headers: {
@@ -93,18 +102,20 @@ export const googleAuth = (setSuccessToggle) => async (dispatch) => {
                 }
             };
 
-            const { data } = await axios.post(`${API_KEY}/api/auth/firebase`, { token }, config);
+            const { status, data } = await axios.post(`${API_KEY}/api/user/auth/firebase-auth`, {token}, config);
 
-            localStorage.setItem('token', data.token);
+            if (status === 200) {
+                localStorage.setItem('token', data.token);
+                dispatch(loginSuccess());
+                dispatch(verify())
+                toast.success(data.message);
+            }
 
-            dispatch(loginSuccess());
-            setSuccessToggle(true)
-            dispatch(verify())
-            toast.success("Authentication Successful!");
 
         } catch (err) {
             console.error(err);
             dispatch(loginFail(err.response.data.message));
+            toast.error(err.response.data.message)
         }
     } catch (err) {
         console.error(err);
@@ -112,35 +123,6 @@ export const googleAuth = (setSuccessToggle) => async (dispatch) => {
 
 }
 
-export const facebookAuth = (setSuccessToggle) => async (dispatch) => {
-
-    try {
-        const token = await signInSignUpWithFacebook();
-        try {
-            const config = {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            };
-
-            const { data } = await axios.post(`${API_KEY}/api/auth/firebase`, { token }, config);
-
-            localStorage.setItem('token', data.token);
-
-            dispatch(loginSuccess());
-            setSuccessToggle(true)
-            dispatch(verify())
-            toast.success("Authentication Successful!");
-
-        } catch (err) {
-            console.error(err);
-            dispatch(loginFail(err.response.data.message));
-        }
-    } catch (err) {
-        console.error(err);
-    }
-
-}
 
 
 
@@ -175,20 +157,20 @@ export const editProfile = (updatedUserData) => async (dispatch) => {
     try {
 
         dispatch(editUserRequest())
-       
+
         const config = {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`
             }
         }
 
-        const { data } = await axios.put(`${API_KEY}/api/user/update`,updatedUserData, config);
+        const { data } = await axios.put(`${API_KEY}/api/user/update`, updatedUserData, config);
 
         dispatch(editUserSuccess())
         dispatch(getUser())
 
         toast.success("Profile Updated Successfully!");
-        
+
 
     } catch (err) {
         dispatch(editUserFail(err.response.data.message));

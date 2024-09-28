@@ -1,14 +1,37 @@
-import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import React, { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { googleAuth, signup } from '../actions/userActions'
+import { useDispatch, useSelector } from 'react-redux'
 
 const Signup = () => {
 
 
+    const { isAuthenticated } = useSelector((state) => state.user);
     const [userData, setUserData] = useState({})
+
+    const dispatch = useDispatch()
+    const navigate = useNavigate();
+
+    // Get isAuthenticated state from Redux store
+
+    // Navigate to home if user is authenticated
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate('/');
+        }
+    }, [isAuthenticated, navigate])
 
     const handleSignup = (e) => {
         e.preventDefault()
+
+        dispatch(signup(userData))
+
         console.log({ userData })
+    }
+
+
+    const handleGoogleSignup = () =>{
+        dispatch(googleAuth())
     }
 
     return (
@@ -75,7 +98,7 @@ const Signup = () => {
 
                                 <div className="flex flex-col items-center justify-center gap-3">
                                     <p className="font-semibold">Already have an account? <Link to="/login" className="text-blue-600">Login</Link></p>
-                                    <button className="text-white py-2 rounded-md bg-blue-600 px-3 text-sm font-semibold">Signup with Google</button>
+                                    <button type="button" onClick={handleGoogleSignup} className="text-white py-2 rounded-md bg-blue-600 px-3 text-sm font-semibold">Signup with Google</button>
                                 </div>
 
                             </form>

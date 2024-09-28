@@ -4,16 +4,15 @@ const {
     register,
     login,
     firbaseAuth,
-    verify,
-    validateRegistration,
-    validateLogin
+    verify
 } = require('../controllers/userControllers');
 const { isAuthenticated } = require('../middlewares/auth');
+const verifyFirebaseToken = require('../middlewares/verifyFirebaseToken');
 
 // User routes
-router.post('/register', validateRegistration, register);
-router.post('/login', validateLogin, login);
+router.post('/register', register);
+router.post('/login', login);
 router.get('/auth/verify', isAuthenticated, verify);
-router.post('/auth/firebase-auth', firbaseAuth);
+router.post('/auth/firebase-auth', verifyFirebaseToken, firbaseAuth);
 
 module.exports = router;

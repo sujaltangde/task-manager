@@ -1,11 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { PiNotepadFill } from "react-icons/pi";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router";
 import { Link } from "react-router-dom";
+import { verify } from "../actions/userActions";
+import { logout } from "../slices/userSlice";
+import { toast } from "react-toastify";
 
 const Navbar = () => {
     const location = useLocation();
+    const { isAuthenticated } = useSelector((state) => state.user);
+    const dispatch = useDispatch()
 
     // Memoize the pathName for optimization
     const pathName = useMemo(() => location.pathname, [location.pathname]);
@@ -19,12 +24,19 @@ const Navbar = () => {
 
     const [btnState, setBtnState] = useState(initialBtnState);
 
-   
+
+    const handleLogout = useCallback(() => {
+        localStorage.clear();
+        dispatch(verify());
+        dispatch(logout())
+        toast.success("Logout Successful!");
+      }, [dispatch]);
+
+
     useEffect(() => {
         setBtnState(initialBtnState);
     }, [initialBtnState]);
 
-    const { isAuthenticated } = useSelector((state) => state.user);
 
     return (
         <>
@@ -36,7 +48,7 @@ const Navbar = () => {
 
                     <div className="flex items-center gap-5">
                         {isAuthenticated ? (
-                            <button className="px-4 py-1 bg-red-600 text-white font-semibold rounded-sm">Logout</button>
+                            <button onClick={handleLogout} className="px-4 py-1 bg-red-600 text-white font-semibold rounded-sm">Logout</button>
                         ) : (
                             <>
                                 <Link to="/login" className={`font-semibold ${btnState === 'login' ? 'text-blue-600 bg-white rounded-sm py-1 px-4' : 'text-white py-1 px-4'}`}>Login</Link>

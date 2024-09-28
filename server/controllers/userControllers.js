@@ -1,25 +1,27 @@
 const { createToken } = require('../middlewares/auth');
 const User = require('../models/userModel');
-const { body } = require('express-validator');
-
-// Validation middleware for registration
-exports.validateRegistration = [
-  body('firstName').notEmpty().withMessage('First name is required'),
-  body('lastName').notEmpty().withMessage('Last name is required'),
-  body('email').isEmail().withMessage('Valid email is required'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
-  body('confirmPassword').custom((value, { req }) => {
-    if (value !== req.body.password) {
-      throw new Error('Passwords do not match');
-    }
-    return true;
-  }),
-];
 
 // User registration
 exports.register = async (req, res, next) => {
   try {
-    const { firstName, lastName, email, password } = req.body;
+    const { firstName, lastName, email, password, confirmPassword } = req.body;
+
+    // Manual validation checks
+    if (!firstName) {
+      return res.status(400).json({ success: false, message: 'First name is required' });
+    }
+    if (!lastName) {
+      return res.status(400).json({ success: false, message: 'Last name is required' });
+    }
+    if (!email || !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
+      return res.status(400).json({ success: false, message: 'Valid email is required' });
+    }
+    if (!password || password.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters long' });
+    }
+    if (password !== confirmPassword) {
+      return res.status(400).json({ success: false, message: 'Passwords do not match' });
+    }
 
     // Check if user already exists
     const userExists = await User.findOne({ email });
@@ -32,7 +34,7 @@ exports.register = async (req, res, next) => {
       firstName,
       lastName,
       email,
-      password, // password will be hashed by mongoose pre-save middleware
+      password,
     });
 
     const token = createToken(user._id, user.email);
@@ -53,16 +55,18 @@ exports.register = async (req, res, next) => {
   }
 };
 
-// Validation middleware for login
-exports.validateLogin = [
-  body('email').isEmail().withMessage('Valid email is required'),
-  body('password').notEmpty().withMessage('Password is required'),
-];
-
 // User login
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
+
+    // Manual validation checks
+    if (!email || !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
+      return res.status(400).json({ message: 'Valid email is required' });
+    }
+    if (!password) {
+      return res.status(400).json({ message: 'Password is required' });
+    }
 
     // Check for user in database
     const user = await User.findOne({ email });
@@ -98,7 +102,7 @@ exports.firbaseAuth = async (req, res, next) => {
     const { email, name } = req.user;
 
     let user = await User.findOne({ email });
-    const password = Math.random().toString(36).slice(-8); // Generate a random password
+    const password = Math.random().toString(36).slice(-8); 
 
     if (!user) {
       user = await User.create({
@@ -106,7 +110,7 @@ exports.firbaseAuth = async (req, res, next) => {
         email,
         firstName: name.split(' ')[0],
         lastName: name.split(' ')[1],
-        password, // Password can be used for user authentication
+        password, 
       });
     }
 
@@ -114,7 +118,7 @@ exports.firbaseAuth = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      message: 'User authenticated successfully',
+      message: 'Login successfull!',
       token,
     });
   } catch (err) {
