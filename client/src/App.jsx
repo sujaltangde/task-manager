@@ -6,11 +6,12 @@ import 'react-toastify/dist/ReactToastify.css';
 import ProtectedRoute from './components/ProtectedRoute'
 import Navbar from "./components/Navbar";
 import { useDispatch } from "react-redux";
-import { verify } from "./actions/userActions";
+import { getUser, verify } from "./actions/userActions";
 // import SuspenseLoader from "./components/SuspenseLoader";
 
 
 const Home = lazy(() => import('./pages/Home'));
+const Profile = lazy(() => import('./pages/Profile'));
 const Login = lazy(() => import('./pages/Login'));
 const Signup = lazy(() => import('./pages/Signup'));
 
@@ -22,10 +23,16 @@ const App = () => {
     dispatch(verify());
   }, [dispatch]);
 
+  const getUserData = useCallback(() => {
+    dispatch(getUser());
+  }, [dispatch]);
 
-  useEffect(() => {
+
+  useEffect(() => {  
     verifyAuth();
-  }, [verifyAuth]);
+    getUserData()
+  }, [verifyAuth,getUserData]);
+
 
 
   return (
@@ -41,9 +48,7 @@ const App = () => {
       <Suspense fallback={<>Loading...</>}>
         <Routes>
           <Route path="/login" element={
-
             <Login />
-
           } />
           <Route path="/signup" element={<Signup />} />
 
@@ -52,6 +57,15 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <Home />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             }
           />

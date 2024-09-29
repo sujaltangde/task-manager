@@ -25,6 +25,10 @@ const userSchema = new mongoose.Schema({
             message: 'Please enter a valid email address',
         },
     },
+    avatar: {
+        type: String, // Base64-encoded data
+        required: true
+    },
     password: {
         type: String,
         required: true,

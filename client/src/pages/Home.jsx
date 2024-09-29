@@ -17,18 +17,21 @@ const Home = () => {
         todo: [],
         inProgress: [],
         done: []
-    });   
+    });
 
 
-    const fetchTasks = async () => {
+    const fetchTasks = async (searchTerm = "", sortOption = "recent") => {
         try {
-
             const config = {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`
                 }
-            }
-            const response = await axios.get(`${API_KEY}/api/tasks`, config); // API endpoint to get tasks
+            };
+
+            const response = await axios.get(`${API_KEY}/api/tasks`, {
+                params: { search: searchTerm, sort: sortOption },
+                ...config
+            }); // API endpoint to get tasks
             const { todo, inProgress, done } = response.data.tasks;
 
             setTasks({
@@ -39,8 +42,7 @@ const Home = () => {
         } catch (error) {
             console.error("Error fetching tasks:", error);
         }
-    };
-
+    }
 
     const dispatch = useDispatch()
 
@@ -48,11 +50,11 @@ const Home = () => {
         fetchTasks();
     }, []);
 
-    
+
     const onDragEnd = async (result) => {
         const { source, destination } = result;
 
-        if (!destination) return; 
+        if (!destination) return;
 
         if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
@@ -62,7 +64,7 @@ const Home = () => {
         const destColumn = tasks[destination.droppableId];
         destColumn.splice(destination.index, 0, movedTask);
 
-        dispatch(changeTaskStatus(movedTask._id,destination.droppableId))
+        dispatch(changeTaskStatus(movedTask._id, destination.droppableId))
 
     };
 
@@ -71,7 +73,7 @@ const Home = () => {
             <DragDropContext onDragEnd={onDragEnd}>
                 <div className="pt-16 flex flex-col">
                     <AddTask fetchTasks={fetchTasks} />
-                    <SearchAndSort />
+                    <SearchAndSort fetchTasks={fetchTasks} />
                     <div className="flex sm:flex-row flex-col gap-4 p-4 columns  bg-gray-50">
                         {["todo", "inProgress", "done"].map((columnId) => (
                             <Column fetchTasks={fetchTasks} key={columnId} id={columnId} tasks={tasks[columnId]} />

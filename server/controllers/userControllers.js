@@ -4,7 +4,7 @@ const User = require('../models/userModel');
 // User registration
 exports.register = async (req, res, next) => {
   try {
-    const { firstName, lastName, email, password, confirmPassword } = req.body;
+    const { firstName, lastName, email, avatar, password, confirmPassword } = req.body;
 
     // Manual validation checks
     if (!firstName) {
@@ -12,6 +12,9 @@ exports.register = async (req, res, next) => {
     }
     if (!lastName) {
       return res.status(400).json({ success: false, message: 'Last name is required' });
+    }
+    if (!avatar) {
+      return res.status(400).json({ success: false, message: 'Avatar is required' });
     }
     if (!email || !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
       return res.status(400).json({ success: false, message: 'Valid email is required' });
@@ -34,6 +37,7 @@ exports.register = async (req, res, next) => {
       firstName,
       lastName,
       email,
+      avatar,
       password,
     });
 
@@ -71,7 +75,7 @@ exports.login = async (req, res, next) => {
     // Check for user in database
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ success: false, message: 'Invalid email or password' });
+      return res.status(401).json({ success: false, message: 'User does not exists!' });
     }
 
     // Compare passwords
@@ -99,7 +103,9 @@ exports.login = async (req, res, next) => {
 // Firebase authentication
 exports.firbaseAuth = async (req, res, next) => {
   try {
-    const { email, name } = req.user;
+    const { email, name, picture } = req.user;
+
+    console.log(req.user)
 
     let user = await User.findOne({ email });
     const password = Math.random().toString(36).slice(-8);
@@ -110,6 +116,7 @@ exports.firbaseAuth = async (req, res, next) => {
         email,
         firstName: name.split(' ')[0],
         lastName: name.split(' ')[1],
+        avatar: picture,
         password,
       });
     }
@@ -137,5 +144,30 @@ exports.verify = async (req, res, next) => {
     });
   } catch (err) {
     return next(err); // Forward error to error handler
+  }
+};
+
+
+
+exports.getUser = async (req, res, next) => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        avatar: user.avatar
+      },
+    });
+  } catch (err) {
+    next(err); // Forward error to error handler
   }
 };

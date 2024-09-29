@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux'
 
 const Login = () => {
 
-    const { isAuthenticated } = useSelector((state) => state.user);
+    const { isAuthenticated, authLoading } = useSelector((state) => state.user);
     const [userData, setUserData] = useState({})
 
     const dispatch = useDispatch()
@@ -59,8 +59,8 @@ const Login = () => {
                                     }
                                     required  className="border outline-none border-gray-500 px-3 py-2" type="password" placeholder='Password' />
 
-                                <button type="submit" className='w-full py-2 bg-blue-600 text-white font-semibold'>
-                                    Login
+                                <button disabled={authLoading} type="submit" className='w-full py-2 bg-blue-600 text-white font-semibold'>
+                                {authLoading ? "Loading..." : "Login"}
                                 </button>
 
                                 <div className="flex flex-col items-center justify-center gap-3">

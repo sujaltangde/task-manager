@@ -3,11 +3,29 @@ const Task = require('../models/taskModel');
 // Get all tasks for a specific user
 exports.allTasksOfUser = async (req, res, next) => {
   try {
+    const { search, sort } = req.query; // Get search and sort query params
     const tasks = await Task.find({ userId: req.user._id });
 
-    const todo = tasks.filter((task) => task.status === 'todo');
-    const inProgress = tasks.filter((task) => task.status === 'inProgress');
-    const done = tasks.filter((task) => task.status === 'done');
+    // Filter tasks by search query
+    let filteredTasks = tasks;
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filteredTasks = tasks.filter(task =>
+        task.title.toLowerCase().includes(searchLower) || // Adjust this based on your task structure
+        task.description.toLowerCase().includes(searchLower) // Adjust this based on your task structure
+      );
+    }
+
+    // Sort tasks based on the specified order
+    if (sort === 'recent') {
+      filteredTasks.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // Adjust createdAt based on your task model
+    } else if (sort === 'oldest') {
+      filteredTasks.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)); // Adjust createdAt based on your task model
+    }
+
+    const todo = filteredTasks.filter((task) => task.status === 'todo');
+    const inProgress = filteredTasks.filter((task) => task.status === 'inProgress');
+    const done = filteredTasks.filter((task) => task.status === 'done');
 
     return res.status(200).json({
       success: true,

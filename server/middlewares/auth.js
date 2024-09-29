@@ -39,7 +39,7 @@ exports.isAuthenticated = async (req, res, next) => {
             }
 
             try {
-                const user = await User.findById(decoded.id);
+                const user = await User.findById(decoded.id).select('-password');
 
                 if (!user) {
                     return res.status(404).json({

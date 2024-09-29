@@ -26,6 +26,7 @@ export const login = (userData) => async (dispatch) => {
             dispatch(loginSuccess());
             localStorage.setItem('authState', 'true')
             dispatch(verify())
+            dispatch(getUser())
             toast.success(response.data.message);
         }
 
@@ -58,6 +59,7 @@ export const signup = (userData) => async (dispatch) => {
             dispatch(registerSuccess());
             localStorage.setItem('authState', 'true')
             dispatch(verify())
+            dispatch(getUser())
             toast.success(response.data.message);
         } else {
             toast.error(response.data.message);
@@ -80,8 +82,6 @@ export const verify = () => async (dispatch) => {
         }
 
         const response = await axios.get(`${API_KEY}/api/user/auth/verify`, config);
-
-        console.log(response)
 
         if (response.status === 200) {
             dispatch(verifyLoginSuccess(response.data))
@@ -111,6 +111,7 @@ export const googleAuth = () => async (dispatch) => {
                 dispatch(loginSuccess());
                 localStorage.setItem('authState', 'true')
                 dispatch(verify())
+                dispatch(getUser())
                 toast.success(data.message);
             }
 
@@ -141,42 +142,16 @@ export const getUser = () => async (dispatch) => {
             }
         }
 
-        const { data } = await axios.get(`${API_KEY}/api/user`, config);
+        const response = await axios.get(`${API_KEY}/api/user`, config);
 
-        console.log("data", data.user)
-
-        dispatch(getUserSuccess(data.user))
-
-
-
-    } catch (err) {
-        dispatch(getUserFail());
-    }
-}
-
-
-
-export const editProfile = (updatedUserData) => async (dispatch) => {
-    try {
-
-        dispatch(editUserRequest())
-
-        const config = {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`
-            }
+        if(response.status === 200){
+            dispatch(getUserSuccess(response.data.user))
         }
 
-        const { data } = await axios.put(`${API_KEY}/api/user/update`, updatedUserData, config);
-
-        dispatch(editUserSuccess())
-        dispatch(getUser())
-
-        toast.success("Profile Updated Successfully!");
-
-
     } catch (err) {
-        dispatch(editUserFail(err.response.data.message));
-        toast.error(err.response.data.message);
+        dispatch(getUserFail(err.response.data.message));
+        toast.error(err.response.data.message)
     }
 }
+
+

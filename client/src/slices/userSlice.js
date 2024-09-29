@@ -6,7 +6,13 @@ const initialState = {
     authLoading: false,
     error: null,
     isAuthenticated: localStorage.getItem('authState') === 'true',
-    user: {}
+    user: {
+        avatar: '', 
+        firstName: '',
+        lastName: '',
+        email: '',
+        avatar: ''
+    }
 };
 
 const userSlice = createSlice({
