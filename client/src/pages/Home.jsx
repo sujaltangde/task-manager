@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import axios from "axios";
-import TaskCard from "../components/taskManager/taskCard";
+import TaskCard from "../components/taskManager/TaskCard";
 import AddTask from "../components/taskManager/AddTask";
 import SearchAndSort from "../components/taskManager/SearchAndSort";
 import TaskDetailsModal from "../components/taskManager/TaskDetailsModal";

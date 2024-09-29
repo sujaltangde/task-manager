@@ -150,7 +150,6 @@ export const getUser = () => async (dispatch) => {
 
     } catch (err) {
         dispatch(getUserFail(err.response.data.message));
-        toast.error(err.response.data.message)
     }
 }
 
