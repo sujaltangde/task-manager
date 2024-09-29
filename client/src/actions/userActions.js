@@ -24,6 +24,7 @@ export const login = (userData) => async (dispatch) => {
         if (response.status === 200) {
             localStorage.setItem('token', response.data.data.token);
             dispatch(loginSuccess());
+            localStorage.setItem('authState', 'true')
             dispatch(verify())
             toast.success(response.data.message);
         }
@@ -55,6 +56,7 @@ export const signup = (userData) => async (dispatch) => {
         if (response.status === 201) {
             localStorage.setItem('token', response.data.data.token);
             dispatch(registerSuccess());
+            localStorage.setItem('authState', 'true')
             dispatch(verify())
             toast.success(response.data.message);
         } else {
@@ -107,6 +109,7 @@ export const googleAuth = () => async (dispatch) => {
             if (status === 200) {
                 localStorage.setItem('token', data.token);
                 dispatch(loginSuccess());
+                localStorage.setItem('authState', 'true')
                 dispatch(verify())
                 toast.success(data.message);
             }

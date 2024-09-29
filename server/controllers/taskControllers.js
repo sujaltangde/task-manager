@@ -1,25 +1,22 @@
 const Task = require('../models/taskModel');
-const { body, param } = require('express-validator');
-
-exports.validateTaskCreation = [
-  body('title').notEmpty().withMessage('Title is required'),
-  body('description').notEmpty().withMessage('Description is required'),
-];
-
-exports.validateTaskId = [
-  param('taskId').isMongoId().withMessage('Invalid Task ID'),
-];
-
 
 // Get all tasks for a specific user
 exports.allTasksOfUser = async (req, res, next) => {
   try {
     const tasks = await Task.find({ userId: req.user._id });
 
+    const todo = tasks.filter((task) => task.status === 'todo');
+    const inProgress = tasks.filter((task) => task.status === 'inProgress');
+    const done = tasks.filter((task) => task.status === 'done');
+
     return res.status(200).json({
       success: true,
-      message: "Tasks fetched successfully",
-      tasks
+      message: 'Tasks fetched successfully',
+      tasks: {
+        todo,
+        inProgress,
+        done,
+      },
     });
   } catch (error) {
     next(error);
@@ -30,16 +27,22 @@ exports.allTasksOfUser = async (req, res, next) => {
 exports.task = async (req, res, next) => {
   const { taskId } = req.params;
 
+  // Task ID validation
+  if (!taskId.match(/^[0-9a-fA-F]{24}$/)) {
+    return res.status(400).json({ success: false, message: 'Invalid Task ID' });
+  }
+
   try {
     const task = await Task.findById(taskId);
 
     if (!task) {
       return res.status(404).json({ success: false, message: 'Task not found' });
     }
+
     return res.status(200).json({
       success: true,
-      message: "Task fetched successfully!",
-      task
+      message: 'Task fetched successfully!',
+      task,
     });
   } catch (error) {
     next(error);
@@ -50,6 +53,19 @@ exports.task = async (req, res, next) => {
 exports.createTask = async (req, res, next) => {
   const { title, description } = req.body;
 
+  // Manual validation
+  const errors = [];
+  if (!title || title.trim() === '') {
+    errors.push({ field: 'title', message: 'Title is required' });
+  }
+  if (!description || description.trim() === '') {
+    errors.push({ field: 'description', message: 'Description is required' });
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).json({ success: false, message: errors[0].message });
+  }
+
   try {
     const newTask = new Task({
       title,
@@ -59,8 +75,8 @@ exports.createTask = async (req, res, next) => {
     await newTask.save();
     return res.status(201).json({
       success: true,
-      message: "Task created successfully!",
-      newTask
+      message: 'Task added successfully!',
+      newTask,
     });
   } catch (error) {
     next(error);
@@ -71,6 +87,24 @@ exports.createTask = async (req, res, next) => {
 exports.editTask = async (req, res, next) => {
   const { taskId } = req.params;
   const { title, description } = req.body;
+
+  // Task ID validation
+  if (!taskId.match(/^[0-9a-fA-F]{24}$/)) {
+    return res.status(400).json({ success: false, message: 'Invalid Task ID' });
+  }
+
+  // Manual validation for editing task
+  const errors = [];
+  if (!title || title.trim() === '') {
+    errors.push({ field: 'title', message: 'Title is required' });
+  }
+  if (!description || description.trim() === '') {
+    errors.push({ field: 'description', message: 'Description is required' });
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).json({ success: false, message: errors[0].message });
+  }
 
   try {
     const updatedTask = await Task.findByIdAndUpdate(
@@ -85,8 +119,8 @@ exports.editTask = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      message: "Task edited successfully!",
-      updatedTask
+      message: 'Task edited successfully!',
+      updatedTask,
     });
   } catch (error) {
     next(error);
@@ -97,6 +131,11 @@ exports.editTask = async (req, res, next) => {
 exports.deleteTask = async (req, res, next) => {
   const { taskId } = req.params;
 
+  // Task ID validation
+  if (!taskId.match(/^[0-9a-fA-F]{24}$/)) {
+    return res.status(400).json({ success: false, message: 'Invalid Task ID' });
+  }
+
   try {
     const deletedTask = await Task.findByIdAndDelete(taskId);
     if (!deletedTask) {
@@ -105,34 +144,37 @@ exports.deleteTask = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      message: "Task deleted successfully!",
-      deletedTask
+      message: 'Task deleted successfully!',
+      deletedTask,
     });
   } catch (error) {
     next(error);
   }
 };
 
-
+// Change task status
 exports.changeTaskStatus = async (req, res, next) => {
   const { taskId } = req.params;
   const { status } = req.body;
 
-  if (!status) {
-    const error = new Error("Status is required");
-    error.status = 400;
-    return next(error);
+  // Task ID validation
+  if (!taskId.match(/^[0-9a-fA-F]{24}$/)) {
+    return res.status(400).json({ success: false, message: 'Invalid Task ID' });
   }
 
-  // Check if status is valid
-  if (!['todo', 'in-progress', 'done'].includes(status)) {
-    const error = new Error("Status should be one of: 'todo', 'in-progress', 'done'");
-    error.status = 400;
-    return next(error);
+  // Status validation
+  if (!status) {
+    return res.status(400).json({ success: false, message: 'Status is required' });
+  }
+
+  if (!['todo', 'inProgress', 'done'].includes(status)) {
+    return res.status(400).json({
+      success: false,
+      message: "Status should be one of: 'todo', 'inProgress', 'done'",
+    });
   }
 
   try {
-
     const updatedTask = await Task.findByIdAndUpdate(
       taskId,
       { status },
@@ -146,9 +188,9 @@ exports.changeTaskStatus = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: `Task status changed to ${status}`,
-      updatedTask
+      updatedTask,
     });
   } catch (error) {
-    next(error); // Pass the error to the error-handling middleware
+    next(error);
   }
 };

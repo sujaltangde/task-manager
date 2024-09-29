@@ -5,8 +5,7 @@ const initialState = {
     loading: false,
     authLoading: false,
     error: null,
-    isAuthenticated: false,
-    showLoginModal: false,
+    isAuthenticated: localStorage.getItem('authState') === 'true',
     user: {}
 };
 

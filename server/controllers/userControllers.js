@@ -41,7 +41,7 @@ exports.register = async (req, res, next) => {
 
     return res.status(201).json({
       success: true,
-      message: 'User registered successfully!',
+      message: 'Sign up successful!',
       data: {
         id: user._id,
         firstName: user.firstName,
@@ -62,29 +62,29 @@ exports.login = async (req, res, next) => {
 
     // Manual validation checks
     if (!email || !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
-      return res.status(400).json({ message: 'Valid email is required' });
+      return res.status(400).json({ success: false, message: 'Valid email is required' });
     }
     if (!password) {
-      return res.status(400).json({ message: 'Password is required' });
+      return res.status(400).json({ success: false, message: 'Password is required' });
     }
 
     // Check for user in database
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
     // Compare passwords
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
     const token = createToken(user._id, user.email);
 
     return res.status(200).json({
       success: true,
-      message: 'User logged in successfully!',
+      message: 'Login successful!',
       data: {
         id: user._id,
         email: user.email,
@@ -102,7 +102,7 @@ exports.firbaseAuth = async (req, res, next) => {
     const { email, name } = req.user;
 
     let user = await User.findOne({ email });
-    const password = Math.random().toString(36).slice(-8); 
+    const password = Math.random().toString(36).slice(-8);
 
     if (!user) {
       user = await User.create({
@@ -110,7 +110,7 @@ exports.firbaseAuth = async (req, res, next) => {
         email,
         firstName: name.split(' ')[0],
         lastName: name.split(' ')[1],
-        password, 
+        password,
       });
     }
 

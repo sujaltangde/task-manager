@@ -65,7 +65,7 @@ const Login = () => {
 
                                 <div className="flex flex-col items-center justify-center gap-3">
                                     <p className="font-semibold">Don't have an account? <Link to="/signup" className="text-blue-600">Signup</Link></p>
-                                    <button onClick={handleGoogleLogin} className="text-white py-2 rounded-md bg-blue-600 px-3 text-sm font-semibold">Login with Google</button>
+                                    <button type="button" onClick={handleGoogleLogin} className="text-white py-2 rounded-md bg-blue-600 px-3 text-sm font-semibold">Login with Google</button>
                                 </div>
 
                             </form>

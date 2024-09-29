@@ -6,8 +6,6 @@ const {
     editTask,
     deleteTask,
     changeTaskStatus,
-    validateTaskCreation,
-    validateTaskId
 } = require('../controllers/taskControllers');
 const { isAuthenticated } = require('../middlewares/auth');
 const router = express.Router();
@@ -16,14 +14,14 @@ router.use(isAuthenticated);
 
 router.get('/', allTasksOfUser);
 
-router.post('/', validateTaskCreation, createTask);
+router.post('/', createTask);
 
-router.get('/:taskId', validateTaskId, task);
+router.get('/:taskId', task);
 
-router.put('/:taskId', validateTaskId, validateTaskCreation, editTask);
+router.put('/:taskId', editTask);
 
-router.delete('/:taskId', validateTaskId, deleteTask);
+router.delete('/:taskId', deleteTask);
 
-router.patch('/:taskId/status', validateTaskId, changeTaskStatus);
+router.patch('/:taskId/status', changeTaskStatus);
 
 module.exports = router;
